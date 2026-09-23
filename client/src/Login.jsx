@@ -97,14 +97,6 @@ export default function Login() {
               )}
             </button>
           )}
-
-          <p className="fine-print">
-            <Icon name="shield" size={14} />
-            <span>
-              After GitHub confirms who you are, this application issues its own signed
-              session token and stores it in a secure, HttpOnly cookie.
-            </span>
-          </p>
         </div>
       </main>
     </div>
