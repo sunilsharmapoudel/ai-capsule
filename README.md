@@ -12,9 +12,9 @@ Built for CSE3CWA / CSE5006 Assignment 3.
 
 | | |
 |---|---|
-| **Public URL** | `https://YOUR-APP-NAME.onrender.com` <!-- ⬅ REPLACE with your real deployed URL --> |
-| **Cloud platform** | Render (free web service) <!-- ⬅ change if you deployed elsewhere --> |
-| **Health check** | `https://YOUR-APP-NAME.onrender.com/api/health` → `{"status":"ok"}` |
+| **Public URL** | `https://ai-capsule-dx35.onrender.com` |
+| **Cloud platform** | Render (free web service) |
+| **Health check** | `https://ai-capsule-dx35.onrender.com/api/health` → `{"status":"ok"}` |
 
 The React frontend and the Express API are served from **the same deployed
 application and the same public origin**. This is the approach recommended in the
@@ -148,8 +148,8 @@ instead of running with a default secret.
 ## 6. GitHub OAuth app setup
 
 1. GitHub → **Settings → Developer settings → OAuth Apps → New OAuth App**.
-2. **Homepage URL:** your deployed URL, e.g. `https://YOUR-APP-NAME.onrender.com`
-3. **Authorization callback URL:** `https://YOUR-APP-NAME.onrender.com/auth/github/callback`
+2. **Homepage URL:** your deployed URL, e.g. `https://ai-capsule-dx35.onrender.com`
+3. **Authorization callback URL:** `https://ai-capsule-dx35.onrender.com/auth/github/callback`
 4. Copy the Client ID, generate a Client Secret, and store both as environment
    variables on the cloud platform.
 
@@ -174,7 +174,7 @@ fallback was not needed.
    `APP_BASE_URL`, `DATABASE_FILE`, `NODE_ENV`). Do not set `PORT` — Render
    provides it. Set `APP_BASE_URL` to the real `https://…onrender.com` URL.
 5. Update the GitHub OAuth app's callback URL to the deployed URL.
-6. Deploy, then check `https://YOUR-APP-NAME.onrender.com/api/health`.
+6. Deploy, then check `https://ai-capsule-dx35.onrender.com/api/health`.
 
 ---
 
@@ -384,22 +384,22 @@ already isolated in that one module behind a small set of functions.
 
 ## 11. Required cURL tests
 
-Both tests were run against the **deployed** application.
-
-<!-- ⬅ AFTER DEPLOYING: re-run both commands against your real URL and paste the
-     actual terminal output below, replacing YOUR-APP-NAME throughout. -->
+Both tests were run against the **deployed** application. Response headers below are
+abbreviated to the relevant lines.
 
 ### Test 1 — no authentication
 
 ```bash
-curl -i https://YOUR-APP-NAME.onrender.com/api/capsules
+curl -i https://ai-capsule-dx35.onrender.com/api/capsules
 ```
 
 Result obtained:
 
 ```
-HTTP/1.1 401 Unauthorized
-Content-Type: application/json; charset=utf-8
+HTTP/2 401
+date: Wed, 23 Sep 2026 01:26:35 GMT
+content-type: application/json; charset=utf-8
+x-render-origin-server: Render
 
 {"error":"Authentication required."}
 ```
@@ -407,14 +407,16 @@ Content-Type: application/json; charset=utf-8
 ### Test 2 — fake / invalid JWT
 
 ```bash
-curl -i -H "Cookie: token=fake-token-123" https://YOUR-APP-NAME.onrender.com/api/capsules
+curl -i -H "Cookie: token=fake-token-123" https://ai-capsule-dx35.onrender.com/api/capsules
 ```
 
 Result obtained:
 
 ```
-HTTP/1.1 401 Unauthorized
-Content-Type: application/json; charset=utf-8
+HTTP/2 401
+date: Wed, 23 Sep 2026 01:26:44 GMT
+content-type: application/json; charset=utf-8
+x-render-origin-server: Render
 
 {"error":"Invalid or expired session."}
 ```
@@ -428,9 +430,9 @@ merely checking that a cookie is present.
 and also return 401 without a valid JWT:
 
 ```bash
-curl -i -X POST   -H "Content-Type: application/json" -d '{}' https://YOUR-APP-NAME.onrender.com/api/capsules      # 401
-curl -i -X PUT    -H "Content-Type: application/json" -d '{}' https://YOUR-APP-NAME.onrender.com/api/capsules/1    # 401
-curl -i -X DELETE                                             https://YOUR-APP-NAME.onrender.com/api/capsules/1    # 401
+curl -i -X POST   -H "Content-Type: application/json" -d '{}' https://ai-capsule-dx35.onrender.com/api/capsules      # 401
+curl -i -X PUT    -H "Content-Type: application/json" -d '{}' https://ai-capsule-dx35.onrender.com/api/capsules/1    # 401
+curl -i -X DELETE                                             https://ai-capsule-dx35.onrender.com/api/capsules/1    # 401
 ```
 
 ---
@@ -499,6 +501,35 @@ booleans. React then rendered an unchecked checkbox for the value `1`. SQLite
 has no boolean type, so `server/db.js` now converts those two columns back to
 real JSON booleans on the way out, and `server/validate.js` requires real
 booleans on the way in.
+
+A third correction, found during deployment rather than locally. The first
+cloud build failed with:
+
+```
+> vite build
+sh: 1: vite: not found
+==> Build failed
+```
+
+The build script was `npm --prefix client install && npm --prefix client run
+build`, which works locally but not on the cloud platform, because
+`NODE_ENV=production` is set there — and npm **skips `devDependencies`
+entirely** when `NODE_ENV` is `production`. Vite is a build-time tool and
+therefore a devDependency, so it was never installed and the build command could
+not find it. The local build had always worked precisely because `NODE_ENV` was
+not set to `production` locally.
+
+The fix was to install the build tooling explicitly:
+
+```json
+"build": "npm --prefix client install --include=dev && npm --prefix client run build"
+```
+
+`--include=dev` overrides the `NODE_ENV=production` behaviour for that one
+install, so the build tooling is available while the deployed server still runs
+in production mode. This was reproduced locally by deleting `client/node_modules`
+and re-running the install with `NODE_ENV=production`, which produced the same
+failure, and then confirmed fixed the same way.
 
 ### How OAuth login, JWT verification and protected API behaviour were verified
 
