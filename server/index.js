@@ -1,10 +1,3 @@
-// ---------------------------------------------------------------------------
-// AI Capsule - Express server.
-//
-// A single deployed application serves both the built React frontend and the
-// Express API from the same public origin, which is what the assignment
-// recommends: no CORS and no cross-origin cookie configuration is needed.
-// ---------------------------------------------------------------------------
 import 'dotenv/config';
 import express from 'express';
 import cookieParser from 'cookie-parser';
@@ -19,8 +12,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = path.join(__dirname, '..', 'client', 'dist');
 const PORT = process.env.PORT || 3000;
 
-// --- Fail fast on missing configuration --------------------------------------
-// Secrets live in environment variables only; nothing is hard-coded here.
 if (!process.env.JWT_SECRET) {
   console.error('FATAL: JWT_SECRET is not set. Add it to your .env file or cloud environment variables.');
   process.exit(1);
@@ -39,8 +30,7 @@ app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 
 // --- Public health check -----------------------------------------------------
-// Deliberately registered before any authentication so the deployed backend
-// can be checked independently.
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
@@ -52,8 +42,7 @@ app.use(authRouter);
 // Every route inside this router applies the requireAuth JWT middleware.
 app.use('/api/capsules', capsulesRouter);
 
-// Any other /api path is a JSON 404, so the SPA fallback below never returns
-// an HTML page to a client that asked for JSON.
+
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found.' });
 });
@@ -64,8 +53,6 @@ const hasBuild = fs.existsSync(path.join(CLIENT_DIST, 'index.html'));
 if (hasBuild) {
   app.use(express.static(CLIENT_DIST));
 
-  // Client-side routing: /, /login and /dashboard are all served by the same
-  // index.html so a direct visit or a refresh works.
   app.use((req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
     res.sendFile(path.join(CLIENT_DIST, 'index.html'));
@@ -82,7 +69,7 @@ if (hasBuild) {
 }
 
 // --- Error handler -----------------------------------------------------------
-// Keeps malformed input as a clean 400 and never leaks a stack trace.
+
 app.use((err, req, res, next) => {
   if (err.type === 'entity.parse.failed' || err instanceof SyntaxError) {
     return res.status(400).json({ error: 'Request body must be valid JSON.' });

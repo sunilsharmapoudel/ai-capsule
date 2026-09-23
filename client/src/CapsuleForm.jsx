@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import Icon from './Icons.jsx';
 
-// These lists match the values accepted by the server in server/validate.js,
-// so the form can never submit a value the API would reject.
 export const CATEGORIES = ['Coding', 'Writing', 'Research', 'Debugging', 'Study', 'Other'];
 export const USEFULNESS = ['Good', 'Needs Improvement'];
 

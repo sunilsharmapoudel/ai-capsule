@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import Icon from './Icons.jsx';
 
-// The logo lock-up used in every header. Rendered as a link unless `to` is null.
 export default function Brand({ to = '/' }) {
   const inner = (
     <>

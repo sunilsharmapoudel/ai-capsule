@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import Brand from './Brand.jsx';
 import Icon from './Icons.jsx';
 
-// Public page. Explains what AI Capsule is and links to the login page.
 const FEATURES = [
   {
     icon: 'save',

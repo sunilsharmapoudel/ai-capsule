@@ -1,5 +1,4 @@
-// A small, dependency-free icon set. Every icon is a 24x24 stroked path drawn
-// in currentColor, so an icon always matches the colour of the text beside it.
+
 const STROKED = {
   capsule: ['M10.5 20.5 20.5 10.5a5 5 0 1 0-7-7L3.5 13.5a5 5 0 1 0 7 7Z', 'm8.5 8.5 7 7'],
   plus: ['M5 12h14', 'M12 5v14'],

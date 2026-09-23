@@ -8,9 +8,6 @@ import Icon from './Icons.jsx';
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // The session check and the capsule request are tracked separately, so the
-  // page never shows "no capsules yet" or an error while a request is still
-  // in flight.
   const [sessionState, setSessionState] = useState('loading'); // loading | ready
   const [user, setUser] = useState(null);
 
@@ -26,7 +23,6 @@ export default function Dashboard() {
   const [actionError, setActionError] = useState(null);
   const [notice, setNotice] = useState(null);
 
-  // Any 401 from any request means the session is gone: send the user to /login.
   const handleUnauthorised = useCallback(() => {
     navigate('/login', { replace: true });
   }, [navigate]);
@@ -77,8 +73,6 @@ export default function Dashboard() {
     };
   }, [loadCapsules, handleUnauthorised]);
 
-  // A save or delete is in progress: lock the other controls so two writes
-  // cannot overlap.
   const busy = saving || deletingId !== null;
 
   function openCreateForm() {
@@ -171,7 +165,6 @@ export default function Dashboard() {
     try {
       await api.logout();
     } catch {
-      // Even if the request fails, send the user back to the public site.
     }
     navigate('/', { replace: true });
   }
@@ -348,7 +341,6 @@ export default function Dashboard() {
   );
 }
 
-// One derived counter in the row above the list.
 function Stat({ icon, label, value, tone = '' }) {
   return (
     <div className="stat">

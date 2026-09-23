@@ -17,7 +17,6 @@ async function request(path, options = {}) {
       ...options
     });
   } catch {
-    // The request never reached the server (offline, DNS, server asleep).
     throw new ApiError('Could not reach the server. Check your connection and try again.', 0);
   }
 

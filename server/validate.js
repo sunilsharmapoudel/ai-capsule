@@ -1,18 +1,3 @@
-// ---------------------------------------------------------------------------
-// Request body validation for capsule records.
-//
-// Rules enforced here (not left to the database):
-//   * every field is checked for its exact JSON type - no silent coercion, so
-//     "true" (a string) is rejected where a boolean is required;
-//   * required fields must be present and non-empty after trimming;
-//   * every string has an explicit maximum length;
-//   * category and usefulness must be one of the allowed values;
-//   * screenshot_url must parse as an absolute http(s) URL;
-//   * unknown fields are rejected, so a client cannot inject columns such as
-//     user_id, id or created_at (these are set by the server only);
-//   * all problems are collected and returned together, not just the first.
-// ---------------------------------------------------------------------------
-
 export const CATEGORIES = ['Coding', 'Writing', 'Research', 'Debugging', 'Study', 'Other'];
 export const USEFULNESS = ['Good', 'Needs Improvement'];
 
@@ -172,10 +157,6 @@ function isHttpUrl(candidate) {
 }
 
 /**
- * Validates an :id route parameter.
- * Accepts only a positive integer, so a malformed id is a clean 400 rather
- * than an unexpected database error.
- *
  * @returns {number|null} the parsed id, or null when invalid.
  */
 export function parseId(raw) {

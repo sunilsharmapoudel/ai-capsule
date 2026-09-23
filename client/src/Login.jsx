@@ -4,7 +4,6 @@ import { api } from './api.js';
 import Brand from './Brand.jsx';
 import Icon from './Icons.jsx';
 
-// Human-readable messages for the ?error= codes the OAuth callback can set.
 const OAUTH_ERRORS = {
   oauth_not_configured: 'GitHub sign-in is not configured on the server yet.',
   missing_code: 'GitHub did not return an authorisation code. Please try again.',
@@ -17,8 +16,7 @@ const OAUTH_ERRORS = {
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  // Start in the checking state so the page never flashes a sign-in button to
-  // a user who already has a valid session.
+
   const [checkingSession, setCheckingSession] = useState(true);
   const [redirecting, setRedirecting] = useState(false);
 
@@ -34,7 +32,6 @@ export default function Login() {
         if (!cancelled) navigate('/dashboard', { replace: true });
       })
       .catch(() => {
-        // 401 simply means "not signed in", which is the expected case here.
         if (!cancelled) setCheckingSession(false);
       });
 
@@ -45,7 +42,6 @@ export default function Login() {
 
   function startOAuth() {
     setRedirecting(true);
-    // A full page navigation, not fetch: the OAuth flow is a browser redirect.
     window.location.href = '/auth/github';
   }
 
