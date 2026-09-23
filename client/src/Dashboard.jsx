@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from './api.js';
 import CapsuleForm from './CapsuleForm.jsx';
+import Brand from './Brand.jsx';
+import Icon from './Icons.jsx';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -179,7 +181,10 @@ export default function Dashboard() {
     return (
       <div className="page">
         <main className="centered-card">
-          <p className="muted" role="status" aria-live="polite">Checking your session…</p>
+          <p className="status-line" role="status" aria-live="polite">
+            <span className="spinner" />
+            Checking your session…
+          </p>
         </main>
       </div>
     );
@@ -188,15 +193,18 @@ export default function Dashboard() {
   return (
     <div className="page">
       <header className="site-header">
-        <Link className="brand" to="/">AI&nbsp;Capsule</Link>
+        <Brand />
         <div className="header-right">
           {user && (
             <span className="user-chip">
-              {user.avatar && <img src={user.avatar} alt="" width="24" height="24" />}
-              {user.name || user.login}
+              {user.avatar && <img src={user.avatar} alt="" width="26" height="26" />}
+              <span className="user-name">{user.name || user.login}</span>
             </span>
           )}
-          <button type="button" className="button" onClick={handleLogout}>Sign out</button>
+          <button type="button" className="button button-ghost" onClick={handleLogout}>
+            <Icon name="logout" size={16} />
+            Sign out
+          </button>
         </div>
       </header>
 
@@ -204,10 +212,18 @@ export default function Dashboard() {
         <div className="dashboard-head">
           <div>
             <h1>Your capsules</h1>
-            <p className="muted">
-              {capsulesState === 'ready'
-                ? `${capsules.length} saved ${capsules.length === 1 ? 'record' : 'records'}`
-                : 'Loading your saved records…'}
+            <p className="status-line">
+              {capsulesState === 'ready' ? (
+                <>
+                  <Icon name="bookmark" size={15} />
+                  {`${capsules.length} saved ${capsules.length === 1 ? 'record' : 'records'}`}
+                </>
+              ) : (
+                <>
+                  <span className="spinner" />
+                  Loading your saved records…
+                </>
+              )}
             </p>
           </div>
           <button
@@ -218,13 +234,33 @@ export default function Dashboard() {
             // so a record cannot be added against an unknown state.
             disabled={capsulesState !== 'ready' || busy || (showForm && !editing)}
           >
+            <Icon name="plus" size={17} strokeWidth={2.2} />
             New capsule
           </button>
         </div>
 
+        {capsulesState === 'ready' && capsules.length > 0 && (
+          <div className="stat-row">
+            <Stat icon="layers" label="Capsules" value={capsules.length} />
+            <Stat
+              icon="circleCheck"
+              tone="tone-moss"
+              label="Reviewed"
+              value={capsules.filter((item) => item.reviewed).length}
+            />
+            <Stat
+              icon="trending"
+              tone="tone-ember"
+              label="Improved"
+              value={capsules.filter((item) => item.improved).length}
+            />
+          </div>
+        )}
+
         {notice && (
           <p className="alert alert-success" role="status">
-            {notice}
+            <Icon name="circleCheck" size={16} />
+            <span className="alert-body">{notice}</span>
             <button type="button" className="link-button" onClick={() => setNotice(null)}>
               Dismiss
             </button>
@@ -233,7 +269,8 @@ export default function Dashboard() {
 
         {actionError && (
           <p className="alert alert-error" role="alert">
-            {actionError}
+            <Icon name="alert" size={16} />
+            <span className="alert-body">{actionError}</span>
             <button type="button" className="link-button" onClick={() => setActionError(null)}>
               Dismiss
             </button>
@@ -254,21 +291,31 @@ export default function Dashboard() {
 
         {/* Loading, error, empty and loaded are four distinct states. */}
         {capsulesState === 'loading' && (
-          <p className="muted" role="status" aria-live="polite">Loading your capsules…</p>
+          <p className="status-line" role="status" aria-live="polite">
+            <span className="spinner" />
+            Loading your capsules…
+          </p>
         )}
 
         {capsulesState === 'error' && (
           <div className="alert alert-error" role="alert">
-            <p>{loadError || 'Your capsules could not be loaded.'}</p>
-            <button type="button" className="button" onClick={loadCapsules}>Try again</button>
+            <Icon name="alert" size={16} />
+            <div className="alert-body">
+              <p>{loadError || 'Your capsules could not be loaded.'}</p>
+              <button type="button" className="button" onClick={loadCapsules}>
+                <Icon name="refresh" size={15} />
+                Try again
+              </button>
+            </div>
           </div>
         )}
 
         {capsulesState === 'ready' && capsules.length === 0 && (
           <div className="empty-state">
+            <span className="empty-icon"><Icon name="inbox" size={26} /></span>
             <h2>No capsules yet</h2>
             <p className="muted">
-              Save your first prompt and it will appear here.
+              Save your first prompt and it will appear here, ready to review and improve.
             </p>
             <button
               type="button"
@@ -276,6 +323,7 @@ export default function Dashboard() {
               onClick={openCreateForm}
               disabled={busy || showForm}
             >
+              <Icon name="plus" size={17} strokeWidth={2.2} />
               Add your first capsule
             </button>
           </div>
@@ -300,6 +348,19 @@ export default function Dashboard() {
   );
 }
 
+// One derived counter in the row above the list.
+function Stat({ icon, label, value, tone = '' }) {
+  return (
+    <div className="stat">
+      <span className={`stat-icon ${tone}`.trim()}><Icon name={icon} size={18} /></span>
+      <span>
+        <span className="stat-value">{value}</span>
+        <span className="stat-label">{label}</span>
+      </span>
+    </div>
+  );
+}
+
 function CapsuleCard({ capsule, onEdit, onDelete, deleting, disabled }) {
   return (
     <li className="capsule-card">
@@ -307,11 +368,22 @@ function CapsuleCard({ capsule, onEdit, onDelete, deleting, disabled }) {
         <div>
           <h3>{capsule.prompt_title}</h3>
           <p className="capsule-meta">
-            <span className="tag">{capsule.project_name}</span>
-            {capsule.prompt_version && <span className="tag tag-muted">{capsule.prompt_version}</span>}
-            {capsule.category && <span className="tag tag-muted">{capsule.category}</span>}
+            <span className="tag">
+              <Icon name="folder" size={12} strokeWidth={2} />
+              {capsule.project_name}
+            </span>
+            {capsule.prompt_version && (
+              <span className="tag tag-version">{capsule.prompt_version}</span>
+            )}
+            {capsule.category && (
+              <span className="tag tag-muted">
+                <Icon name="tag" size={12} strokeWidth={2} />
+                {capsule.category}
+              </span>
+            )}
             {capsule.usefulness && (
               <span className={`tag ${capsule.usefulness === 'Good' ? 'tag-good' : 'tag-warn'}`}>
+                <Icon name="star" size={12} strokeWidth={2} />
                 {capsule.usefulness}
               </span>
             )}
@@ -319,6 +391,7 @@ function CapsuleCard({ capsule, onEdit, onDelete, deleting, disabled }) {
         </div>
         <div className="capsule-actions">
           <button type="button" className="button" onClick={onEdit} disabled={disabled || deleting}>
+            <Icon name="pencil" size={15} />
             Edit
           </button>
           <button
@@ -327,6 +400,7 @@ function CapsuleCard({ capsule, onEdit, onDelete, deleting, disabled }) {
             onClick={onDelete}
             disabled={disabled || deleting}
           >
+            {deleting ? <span className="spinner" /> : <Icon name="trash" size={15} />}
             {deleting ? 'Deleting…' : 'Delete'}
           </button>
         </div>
@@ -335,28 +409,44 @@ function CapsuleCard({ capsule, onEdit, onDelete, deleting, disabled }) {
       <pre className="prompt-text">{capsule.prompt_text}</pre>
 
       {capsule.response_summary && (
-        <p className="capsule-section"><strong>Response:</strong> {capsule.response_summary}</p>
+        <p className="capsule-section">
+          <Icon name="message" size={15} />
+          <span><strong>Response:</strong> {capsule.response_summary}</span>
+        </p>
       )}
       {capsule.notes && (
-        <p className="capsule-section"><strong>Notes:</strong> {capsule.notes}</p>
+        <p className="capsule-section">
+          <Icon name="note" size={15} />
+          <span><strong>Notes:</strong> {capsule.notes}</span>
+        </p>
       )}
       {capsule.screenshot_url && (
         <p className="capsule-section">
-          <strong>Evidence:</strong>{' '}
-          <a href={capsule.screenshot_url} target="_blank" rel="noreferrer noopener">
-            {capsule.screenshot_url}
-          </a>
+          <Icon name="link" size={15} />
+          <span>
+            <strong>Evidence:</strong>{' '}
+            <a href={capsule.screenshot_url} target="_blank" rel="noreferrer noopener">
+              {capsule.screenshot_url}
+            </a>
+          </span>
         </p>
       )}
 
       <p className="capsule-footer">
         <span className={capsule.reviewed ? 'flag flag-on' : 'flag'}>
-          {capsule.reviewed ? '✓ Reviewed' : 'Not reviewed'}
+          <Icon name={capsule.reviewed ? 'circleCheck' : 'circleDot'} size={14} />
+          {capsule.reviewed ? 'Reviewed' : 'Not reviewed'}
         </span>
         <span className={capsule.improved ? 'flag flag-on' : 'flag'}>
-          {capsule.improved ? '✓ Improved' : 'Not improved'}
+          <Icon name={capsule.improved ? 'trending' : 'circleDot'} size={14} />
+          {capsule.improved ? 'Improved' : 'Not improved'}
         </span>
-        <span className="muted">#{capsule.id} · {formatDate(capsule.created_at)}</span>
+        <span className="capsule-id">
+          <Icon name="clock" size={13} />
+          {formatDate(capsule.created_at)}
+          <span aria-hidden="true">·</span>
+          #{capsule.id}
+        </span>
       </p>
     </li>
   );

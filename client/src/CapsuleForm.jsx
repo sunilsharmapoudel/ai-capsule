@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Icon from './Icons.jsx';
 
 // These lists match the values accepted by the server in server/validate.js,
 // so the form can never submit a value the API would reject.
@@ -128,13 +129,14 @@ export default function CapsuleForm({ capsule, onSubmit, onCancel, saving, serve
   const errorFor = (field) => (touched ? errors[field] : undefined);
 
   // Renders one labelled control plus its hint / error text.
-  const renderField = (name, label, { type = 'text', required = false, rows = 0, hint = '' } = {}) => {
+  const renderField = (name, label, { type = 'text', required = false, rows = 0, hint = '', icon = '' } = {}) => {
     const message = errorFor(name);
     const id = `field-${name}`;
     const Control = rows > 0 ? 'textarea' : 'input';
     return (
       <div className={`form-field${message ? ' has-error' : ''}`}>
         <label htmlFor={id}>
+          {icon && <Icon name={icon} size={13} strokeWidth={2} />}
           {label} {required && <span className="required" aria-hidden="true">*</span>}
         </label>
         <Control
@@ -149,31 +151,45 @@ export default function CapsuleForm({ capsule, onSubmit, onCancel, saving, serve
           aria-describedby={message ? `${id}-error` : undefined}
         />
         {hint && !message && <span className="hint">{hint}</span>}
-        {message && <span className="field-error" id={`${id}-error`}>{message}</span>}
+        {message && (
+          <span className="field-error" id={`${id}-error`}>
+            <Icon name="alert" size={13} strokeWidth={2} />
+            {message}
+          </span>
+        )}
       </div>
     );
   };
 
   return (
     <form className="capsule-form" onSubmit={handleSubmit} noValidate>
-      <h2>{isEditing ? `Edit capsule #${capsule.id}` : 'Add a new capsule'}</h2>
+      <h2>
+        <Icon name={isEditing ? 'pencil' : 'plus'} size={19} strokeWidth={2} />
+        {isEditing ? `Edit capsule #${capsule.id}` : 'Add a new capsule'}
+      </h2>
 
       {serverErrors?.length > 0 && (
         <div className="alert alert-error" role="alert">
-          <strong>The server rejected this record:</strong>
-          <ul>
-            {serverErrors.map((detail) => <li key={detail}>{detail}</li>)}
-          </ul>
+          <Icon name="alert" size={16} />
+          <div className="alert-body">
+            <strong>The server rejected this record:</strong>
+            <ul>
+              {serverErrors.map((detail) => <li key={detail}>{detail}</li>)}
+            </ul>
+          </div>
         </div>
       )}
 
       <div className="form-grid">
-        {renderField('project_name', 'Project name', { required: true, hint: 'e.g. SmartFarm Irrigation' })}
-        {renderField('prompt_title', 'Prompt title', { required: true, hint: 'e.g. Debug cloud deployment' })}
-        {renderField('prompt_version', 'Prompt version', { hint: 'e.g. v1, v2, v3' })}
+        {renderField('project_name', 'Project name', { required: true, hint: 'e.g. SmartFarm Irrigation', icon: 'folder' })}
+        {renderField('prompt_title', 'Prompt title', { required: true, hint: 'e.g. Debug cloud deployment', icon: 'bookmark' })}
+        {renderField('prompt_version', 'Prompt version', { hint: 'e.g. v1, v2, v3', icon: 'hash' })}
 
         <div className="form-field">
-          <label htmlFor="field-category">Category</label>
+          <label htmlFor="field-category">
+            <Icon name="tag" size={13} strokeWidth={2} />
+            Category
+          </label>
           <select
             id="field-category"
             value={form.category}
@@ -186,7 +202,10 @@ export default function CapsuleForm({ capsule, onSubmit, onCancel, saving, serve
         </div>
 
         <div className="form-field">
-          <label htmlFor="field-usefulness">Usefulness</label>
+          <label htmlFor="field-usefulness">
+            <Icon name="star" size={13} strokeWidth={2} />
+            Usefulness
+          </label>
           <select
             id="field-usefulness"
             value={form.usefulness}
@@ -198,12 +217,12 @@ export default function CapsuleForm({ capsule, onSubmit, onCancel, saving, serve
           </select>
         </div>
 
-        {renderField('screenshot_url', 'Screenshot evidence URL', { hint: 'Optional link to a screenshot' })}
+        {renderField('screenshot_url', 'Screenshot evidence URL', { hint: 'Optional link to a screenshot', icon: 'image' })}
       </div>
 
-      {renderField('prompt_text', 'Prompt text', { required: true, rows: 5 })}
-      {renderField('response_summary', 'Response summary', { rows: 3, hint: 'What did the AI actually return?' })}
-      {renderField('notes', 'Notes', { rows: 2, hint: 'Reflection or comment' })}
+      {renderField('prompt_text', 'Prompt text', { required: true, rows: 5, icon: 'terminal' })}
+      {renderField('response_summary', 'Response summary', { rows: 3, hint: 'What did the AI actually return?', icon: 'message' })}
+      {renderField('notes', 'Notes', { rows: 2, hint: 'Reflection or comment', icon: 'note' })}
 
       <div className="checkbox-row">
         <label className="checkbox">
@@ -213,6 +232,7 @@ export default function CapsuleForm({ capsule, onSubmit, onCancel, saving, serve
             onChange={(event) => update('reviewed', event.target.checked)}
             disabled={locked}
           />
+          <Icon name="circleCheck" size={15} />
           Response reviewed
         </label>
         <label className="checkbox">
@@ -222,13 +242,15 @@ export default function CapsuleForm({ capsule, onSubmit, onCancel, saving, serve
             onChange={(event) => update('improved', event.target.checked)}
             disabled={locked}
           />
+          <Icon name="trending" size={15} />
           Output improved
         </label>
       </div>
 
       {touched && hasErrors && (
         <p className="alert alert-error" role="alert">
-          Please fix the highlighted fields before saving.
+          <Icon name="alert" size={16} />
+          <span className="alert-body">Please fix the highlighted fields before saving.</span>
         </p>
       )}
 
@@ -238,10 +260,12 @@ export default function CapsuleForm({ capsule, onSubmit, onCancel, saving, serve
           className="button button-primary"
           disabled={locked || (touched && hasErrors)}
         >
+          {saving ? <span className="spinner" /> : <Icon name="save" size={16} />}
           {saving ? 'Saving…' : isEditing ? 'Save changes' : 'Add capsule'}
         </button>
         {onCancel && (
-          <button type="button" className="button" onClick={onCancel} disabled={saving}>
+          <button type="button" className="button button-ghost" onClick={onCancel} disabled={saving}>
+            <Icon name="x" size={16} />
             Cancel
           </button>
         )}

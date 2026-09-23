@@ -1,11 +1,3 @@
-// ---------------------------------------------------------------------------
-// Thin wrapper around fetch for talking to the Express API.
-//
-// The frontend and the API are served from the same origin, so requests use
-// relative paths. `credentials: 'include'` makes the browser send the HttpOnly
-// "token" cookie; the JWT itself is never read by this JavaScript.
-// ---------------------------------------------------------------------------
-
 export class ApiError extends Error {
   constructor(message, status, details = []) {
     super(message);

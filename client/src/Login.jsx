@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from './api.js';
+import Brand from './Brand.jsx';
+import Icon from './Icons.jsx';
 
 // Human-readable messages for the ?error= codes the OAuth callback can set.
 const OAUTH_ERRORS = {
@@ -50,37 +52,58 @@ export default function Login() {
   return (
     <div className="page">
       <header className="site-header">
-        <Link className="brand" to="/">AI&nbsp;Capsule</Link>
+        <Brand />
       </header>
 
       <main className="centered-card">
         <div className="card">
-          <h1>Sign in</h1>
+          <span className="card-icon"><Icon name="lock" size={24} /></span>
+
+          <h1>Welcome back</h1>
           <p className="muted">
             AI Capsule uses your GitHub account to sign you in. Your prompt records are
             private to that account.
           </p>
 
           {errorMessage && (
-            <p className="alert alert-error" role="alert">{errorMessage}</p>
+            <p className="alert alert-error" role="alert">
+              <Icon name="alert" size={16} />
+              <span className="alert-body">{errorMessage}</span>
+            </p>
           )}
 
           {checkingSession ? (
-            <p className="muted" role="status" aria-live="polite">Checking your session…</p>
+            <p className="status-line" role="status" aria-live="polite">
+              <span className="spinner" />
+              Checking your session…
+            </p>
           ) : (
             <button
               type="button"
-              className="button button-primary button-large full-width"
+              className="button button-github button-large full-width"
               onClick={startOAuth}
               disabled={redirecting}
             >
-              {redirecting ? 'Redirecting to GitHub…' : 'Continue with GitHub'}
+              {redirecting ? (
+                <>
+                  <span className="spinner" />
+                  Redirecting to GitHub…
+                </>
+              ) : (
+                <>
+                  <Icon name="github" size={18} />
+                  Continue with GitHub
+                </>
+              )}
             </button>
           )}
 
           <p className="fine-print">
-            After GitHub confirms who you are, this application issues its own signed
-            session token and stores it in a secure, HttpOnly cookie.
+            <Icon name="shield" size={14} />
+            <span>
+              After GitHub confirms who you are, this application issues its own signed
+              session token and stores it in a secure, HttpOnly cookie.
+            </span>
           </p>
         </div>
       </main>
